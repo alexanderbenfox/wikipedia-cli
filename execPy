@@ -34,12 +34,23 @@ args = parser.parse_args()
 page = args.wikipage.replace(" ","_")
 language = "en"
 
+
+
 query_string = "https://" + language + ".wikipedia.org/wiki/" + page
 print(query_string)
+
+import time
+
+pre_fetch = int(round(time.time() * 1000))
+
 #this just grabs all the html at once
 page_response = urllib2.urlopen(query_string)
 
 page_html = page_response.read()
+post_fetch = int(round(time.time() * 1000))
+
+print("time to fetch: " + str(post_fetch-pre_fetch) + "ms")
+
 
 extract = TagExtractor(page_html)
 toc_html = extract.extractToc()
