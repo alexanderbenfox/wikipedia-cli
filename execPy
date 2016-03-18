@@ -23,15 +23,29 @@ class TagExtractor:
 		print(i,j)
 		self.toc = self.html[i:j]	
 		return self.html[i:j]
+	def extractSection(self, section_header):	
+		parse_point1 = "<h2><span class=" + '"' + "mw-headline" + '"' + " id=" + '"' + section_header + '"' + ">" + section_header.replace("_"," ") + "</span></h2>"
+		print(parse_point1)
+		#parse_point1 = "<div id ="
+		parse_point2 = "<h2>"
+
+		i = self.html.find(parse_point1,0)
+		j = self.html.find(parse_point2,i+1) 
+
+		print(i,j)
+		
+		return self.html[i:j]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("wikipage")
 #optional argument
 parser.add_argument("--ignorelinks", help = "ignores the links", action = "store_true")
 parser.add_argument("--fullpage", help = "prints full page instead of just TOC", action = "store_true")
+parser.add_argument("--section", metavar="", dest="section", default="", help="input a section you'd like to retrieve.  If nothing inputted, will return the table of contents")
 args = parser.parse_args()
 
 page = args.wikipage.replace(" ","_")
+section = args.section.replace(" ","_")
 language = "en"
 
 
@@ -40,20 +54,21 @@ query_string = "https://" + language + ".wikipedia.org/wiki/" + page
 print(query_string)
 
 import time
+current_time = lambda:int(round(time.time() * 1000))
 
-pre_fetch = int(round(time.time() * 1000))
+pre_fetch = current_time()
 
 #this just grabs all the html at once
 page_response = urllib2.urlopen(query_string)
 
 page_html = page_response.read()
-post_fetch = int(round(time.time() * 1000))
-
+post_fetch = current_time()
 print("time to fetch: " + str(post_fetch-pre_fetch) + "ms")
 
 
 extract = TagExtractor(page_html)
 toc_html = extract.extractToc()
+section_html = extract.extractSection(section)
 
 conv = html2text.HTML2Text()
 #if(args.ignorelinks):
@@ -61,9 +76,13 @@ conv = html2text.HTML2Text()
 
 page_text = conv.handle(page_html.decode('utf8'))
 toc_text = conv.handle(toc_html.decode('utf8'))
+section_text = conv.handle(section_html.decode('utf8'))
+
 with open("html.txt","w") as f:
 	f.write(page_html)
 
-print(toc_text)
-
+if(section == None or section == ""):
+	print(toc_text)
+else:
+	print(section_text)
 
